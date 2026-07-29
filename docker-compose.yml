@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: opensnap
+      POSTGRES_PASSWORD: opensnap
+      POSTGRES_DB: opensnap
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  keydb:
+    image: eqalpha/keydb:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - keydb_data:/data
+    command: keydb-server /etc/keydb/keydb.conf --appendonly yes
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+# Optional local application services can be added here once Dockerfiles or local build scripts are available.
+# backend:
+#   build: ./backend
+#   depends_on:
+#     - postgres
+#     - keydb
+#     - minio
+#   env_file:
+#     - .env
+#   ports:
+#     - "8000:8000"
+#   volumes:
+#     - ./backend:/app
+#   command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# recommendation:
+#   build: ./recommendation
+#   depends_on:
+#     - kafka
+#   env_file:
+#     - .env
+
+volumes:
+  postgres_data:
+  keydb_data:
+  minio_data:
